@@ -15,11 +15,18 @@ if __name__ == '__main__':
 
 
 	
-
+	'''
 	arm.plot3dArm()
 	fig1 = plt.figure()
 	fig1.set_visible(1)
-	
+
+	arm.setQ5(np.pi/2)
+	arm.plot3dArm()
+	#fig1 = plt.figure()
+	#fig1.set_visible(1)
+
+
+	'''	
 	#arm.plotXY()
 
 	#plt.figure()

@@ -172,7 +172,7 @@ class GreenRobotArm():
 
 
     def getArmAngles(self):
-        return np.matrix([self.L1, self.L2, self.L3, self.L4, self.L5]).T
+        return np.matrix([self.q1, self.q2, self.q3, self.q4, self.q5]).T
     
     def setArmAngles(self, angles):
         self.setQ1(angles[0])
@@ -248,7 +248,21 @@ class GreenRobotArm():
         #plt.plot(y,z)
 
     def getPointsColumn(self):
-        return np.matrix(self.getPlotPoints()).T
+        armPoints = self.getPlotPoints()
+        xs=armPoints[0]
+        effectorX = xs[4]
+        
+        ys=armPoints[1]
+        effectorY = ys[4]
+
+        zs=armPoints[2]
+        effectorZ = zs[4]
+
+        pointsColumn= np.matrix([effectorX,effectorY,effectorZ]).T
+
+
+        #print('the pointsColumn is of shape'+str(pointsColumn.shape))
+        return pointsColumn
 
 
     
@@ -257,34 +271,40 @@ class GreenRobotArm():
         dTheta = .01
 
         th0 = self.getPointsColumn()
-        
+        #print(th0)
         self.setQ1(self.q1+dTheta)
-        Thq1 = self.getPointsColumn()
+        thq1 = self.getPointsColumn()
+        #print('the type of thq1 is '+str(type(thq1)))
+        #print(thq1)
+        #print('the shape of thq1 is '+str(thq1.shape))
         self.setQ1(self.q1-dTheta)
-        j1=(thq1-th0)/dTheta
 
+        j1=(thq1-th0)/dTheta
+        #print('the shape of j1 is '+str(j1.shape))
 
         self.setQ2(self.q2+dTheta)
-        Thq2 = self.getPointsColumn()
+        thq2 = self.getPointsColumn()
         self.setQ2(self.q2-dTheta)
         j2=(thq2-th0)/dTheta
 
         self.setQ3(self.q3+dTheta)
-        Thq3 = self.getPointsColumn()
+        thq3 = self.getPointsColumn()
         self.setQ3(self.q3-dTheta)
         j3=(thq3-th0)/dTheta
 
         self.setQ4(self.q4+dTheta)
-        Thq4 = self.getPointsColumn()
+        thq4 = self.getPointsColumn()
         self.setQ4(self.q4-dTheta)
         j4=(thq4-th0)/dTheta
 
         self.setQ5(self.q5+dTheta)
-        Thq5 = self.getPointsColumn()
+        thq5 = self.getPointsColumn()
         self.setQ5(self.q5-dTheta)
         j5=(thq5-th0)/dTheta
 
         jac = np.concatenate((j1,j2,j3,j4,j5),axis=1)
+
+        #print('the jacobian is of shape '+str(jac.shape))
 
         return jac;
 
@@ -293,19 +313,23 @@ class GreenRobotArm():
         errorMag=2;
         threshold = .02
         a=0.001;
-        while (errorMag >threshold)
+        while (errorMag >threshold):
             l_d=p;#%[0;400;35]; #%end point (desired location)
             l_c=self.getPointsColumn();# current coordinates of the robot arm 
             e=l_d-l_c; #column of values representing the error between current and desired points
             Jac= self.getJacobianNumeric(); # jacobian matrix 
             Jac_inv=np.linalg.pinv(Jac); # inverse jacobian matrix
             angles = self.getArmAngles()
+            #print('the shape of e')
+            #print(e.shape)
+            #print('the shape of Jac')
+            #print(Jac.shape)
             th_d= angles+(np.dot(Jac_inv,e)) #desired joint angles
-            self.setQ1(th_d.np.item(0))
-            self.setQ2(th_d.np.item(1))
-            self.setQ3(th_d.np.item(2))
-            self.setQ4(th_d.np.item(3))
-            self.setQ5(th_d.np.item(4))
+            self.setQ1(th_d.item(0))
+            self.setQ2(th_d.item(1))
+            self.setQ3(th_d.item(2))
+            self.setQ4(th_d.item(3))
+            self.setQ5(th_d.item(4))
                 #subs(Tr); #%to check for intermediate coordinate points
             newPoints = self.getPointsColumn()
             newError = l_d-newPoints

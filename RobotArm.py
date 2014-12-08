@@ -59,10 +59,14 @@ class GreenRobotArm():
     def setQ1(self, inputQ1):
         
         if(inputQ1> self.q1Max):
+            print('attempted to exceed maximum threshold for q1: '+ str(self.q1Max))
+            print('q1 will be set to:' + str(self.q1Max))
             newQ1 = self.q1Max
         elif(inputQ1<self.q1Min):
             newQ1 = self.q1Max
         else:
+            print('attempted to exceed mainimum threshold for q1: '+ str(self.q5Min))
+            print('q1 will be set to:' + str(self.q1Min))
             newQ1 = inputQ1
 
         self.q1 = inputQ1
@@ -71,40 +75,56 @@ class GreenRobotArm():
 
     def setQ2(self, inputQ2):
         if(inputQ2> self.q2Max):
+            print('attempted to exceed maximum threshold for q2: '+ str(self.q2Max))
+            print('q2 will be set to:' + str(self.q2Max))
             newQ2 = self.q2Max
         elif(inputQ2<self.q2Min):
             newQ2 = self.q2Max
         else:
+            print('attempted to exceed mainimum threshold for q2: '+ str(self.q2Min))
+            print('q2 will be set to:' + str(self.q2Min))
             newQ2 = inputQ2
 
         self.q2 = inputQ2
     
     def setQ3(self, inputQ3):
         if(inputQ3> self.q3Max):
+            print('attempted to exceed maximum threshold for q3: '+ str(self.q3Max))
+            print('q3 will be set to:' + str(self.q3Max))
             newQ3 = self.q3Max
         elif(inputQ3<self.q3Min):
             newQ3 = self.q3Max
         else:
+            print('attempted to exceed mainimum threshold for q3: '+ str(self.q3Min))
+            print('q3 will be set to:' + str(self.q3Min))
             newQ3 = inputQ3
 
         self.q3 = inputQ3
     
     def setQ4(self, inputQ4):
         if(inputQ4> self.q4Max):
+            print('attempted to exceed maximum threshold for q4: '+ str(self.q4Max))
+            print('q4 will be set to:' + str(self.q4Max))
             newQ4 = self.q4Max
         elif(inputQ4<self.q4Min):
             newQ4 = self.q4Max
         else:
+            print('attempted to exceed mainimum threshold for q4: '+ str(self.q4Min))
+            print('q4 will be set to:' + str(self.q4Min))
             newQ4 = inputQ4
 
         self.q4 = inputQ4
     
     def setQ5(self, inputQ5):
         if(inputQ5> self.q5Max):
+            print('attempted to exceed maximum threshold for q5: '+ str(self.q5Max))
+            print('q5 will be set to:' + str(self.q5Max))
             newQ5 = self.q5Max
         elif(inputQ5<self.q5Min):
             newQ5 = self.q5Max
         else:
+            print('attempted to exceed mainimum threshold for q5: '+ str(self.q5Min))
+            print('q5 will be set to:' + str(self.q5Min))
             newQ5 = inputQ5
 
         self.q5 = inputQ5
@@ -326,6 +346,57 @@ class GreenRobotArm():
         #print('the pointsColumn is of shape'+str(pointsColumn.shape))
         return pointsColumn
 
+    def getPosValues(self):
+
+        effectorCoords = self.getPointsColumn();
+        effectorDir = self.computeMarkerOrientation();
+
+        return np.concatenate((effectorCoords,effectorDir))
+
+
+
+
+    def getJacobianNumeric2(self):
+        dTheta = .01
+
+        th0 = self.getPosValues()
+        #print(th0)
+        self.setQ1(self.q1+dTheta)
+        thq1 = self.getPosValues()
+        #print('the type of thq1 is '+str(type(thq1)))
+        #print(thq1)
+        #print('the shape of thq1 is '+str(thq1.shape))
+        self.setQ1(self.q1-dTheta)
+
+        j1=(thq1-th0)/dTheta
+        #print('the shape of j1 is '+str(j1.shape))
+
+        self.setQ2(self.q2+dTheta)
+        thq2 = self.getPosValues()
+        self.setQ2(self.q2-dTheta)
+        j2=(thq2-th0)/dTheta
+
+        self.setQ3(self.q3+dTheta)
+        thq3 = self.getPosValues()
+        self.setQ3(self.q3-dTheta)
+        j3=(thq3-th0)/dTheta
+
+        self.setQ4(self.q4+dTheta)
+        thq4 = self.getPosValues()
+        self.setQ4(self.q4-dTheta)
+        j4=(thq4-th0)/dTheta
+
+        self.setQ5(self.q5+dTheta)
+        thq5 = self.getPosValues()
+        self.setQ5(self.q5-dTheta)
+        j5=(thq5-th0)/dTheta
+
+        jac = np.concatenate((j1,j2,j3,j4,j5),axis=1)
+
+        #print('the jacobian is of shape '+str(jac.shape))
+
+        return jac;        
+
 
     
     #This function will calculate a jacobian matrix of the robot arm
@@ -416,6 +487,51 @@ class GreenRobotArm():
         return np.matrix([self.q1,self.q2,self.q3,self.q4,self.q5]).T
 
     
+    def goToPoint2(self, p):
+        errorMag=2;
+        threshold = .01
+        maxIterations = 100
+        count =0
+        while (errorMag >threshold):
+            l_d=p;#%[0;400;35]; #%end point (desired location and orientation)
+            l_c=self.getPosValues();# current coordinates of the robot arm 
+            e=l_d-l_c; #column of values representing the error between current and desired points
+            Jac= self.getJacobianNumeric2(); # jacobian matrix 
+            Jac_inv=np.linalg.pinv(Jac); # inverse jacobian matrix
+            angles = self.getArmAngles()
+            #print('the shape of e')
+            #print(e.shape)
+            #print('the shape of Jac')
+            #print(Jac.shape)
+            #print(self.getArmAngles())
+            th_d= angles+(np.dot(Jac_inv,e)) #desired joint angles
+
+            self.setQ1(th_d.item(0)%(np.pi*2))
+            self.setQ2(th_d.item(1)%(np.pi*2))
+            self.setQ3(th_d.item(2)%(np.pi*2))
+            self.setQ4(th_d.item(3)%(np.pi*2))
+            self.setQ5(th_d.item(4)%(np.pi*2))
+                #subs(Tr); #%to check for intermediate coordinate points
+            newPoints = self.getPosValues()
+            newError = l_d-newPoints
+            errorMag=np.linalg.norm(newError); #% calculating the norm for running the loop
+            '''
+            there may be a case in which the arm will attempt to travel to a point that is 
+            not reachable by the arm. If this is the case, the loop will go on forever trying to get to the point
+            the code below will break the loop after a certain iteration threshold
+            '''
+            if(count>=maxIterations):
+                print('the loop has iterated '+ str(maxIterations)+' times and the point has not been reached. ')
+                print('navigation to point:')
+                print(p)
+                print('has failed')
+                break
+            
+            count = count+1
+            #print('the while loop has performed '+str(count)+ ' iterations')
+        return np.matrix([self.q1,self.q2,self.q3,self.q4,self.q5]).T
+
+
     def plotXY(self):
         points = self.getPlotPoints()
         plt.plot(points[0],points[1])

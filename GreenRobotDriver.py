@@ -27,7 +27,25 @@ class GreenDriver():
     		encoderPos = angle*(180/np.pi)*100;
     		return encoderPos
 
+    def setJ1Angle(self, angle):
+    	self.c.at.j1.set_pos(angleToEncoder(angle))
+    	self.model.setQ1(angle)
+    
+    def setJ2Angle(self, angle):
+    	self.c.at.j2.set_pos(angleToEncoder(angle))
+    	self.model.setQ2(angle)
 
+    def setJ3Angle(self, angle):
+    	self.c.at.j3.set_pos(angleToEncoder(angle))
+    	self.model.setQ3(angle)
+
+    def setJ4Angle(self, angle):
+    	self.c.at.j4.set_pos(angleToEncoder(angle))
+    	self.model.setQ4(angle)
+
+    def setJ5Angle(self, angle):
+    	self.c.at.j5.set_pos(angleToEncoder(angle))
+    	self.model.setQ5(angle)
     
     def goToAngles(self, j1Theta,j2Theta,j3Theta,j4Theta,j5Theta):
     	
@@ -70,6 +88,7 @@ class GreenDriver():
     This function will navigate the arm to a desired setpoint with a desired end effector orientation
     the point p must be in the form of a matrix with shape (6x1) i.e. p = np.matrix([xPos, yPos, zPos, xDir, yDir, Zdir]) 
     '''
+    
     def driveToPoint(self, p):
 
     	angles = self.model.goToPoint2(p)

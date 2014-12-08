@@ -32,45 +32,45 @@ def goToPoint(self, p):
     spaDim = 3;
     gst0 = [npxeye(spaDim), [0 , L2+L3+L4, L1];zeros(1,spaDim) 1];
 
-    w{1} = [0;0;1];
-    w{2} = [-1;0;0];
-    w{3} = w{2};
-    w{4} = [0;1;0];
-    w{5} = w{2};
+    w[1] = [0;0;1];
+    w[2] = [-1;0;0];
+    w[3] = w[2];
+    w[4] = [0;1;0];
+    w[5] = w[2];
 
     q = cell(1,numJoints);
-    q{1} = [0;0;L1];
-    q{2} = q{1};
-    q{3} = [0;L2;L1];
-    q{4} = [0;L2+L3;L1];
-    q{5} = q{4};
+    q[1] = [0;0;L1];
+    q[2] = q[1];
+    q[3] = [0;L2;L1];
+    q[4] = [0;L2+L3;L1];
+    q[5] = q[4];
 
     expwth = cell(1,numJoints);
-    expwth{1} = [cos(th1) -sin(th1) 0
+    expwth[1] = [cos(th1) -sin(th1) 0
                  sin(th1)  cos(th1) 0
                         0         0 1];
-    expwth{2} = [1         0        0
+    expwth[2] = [1         0        0
                  0  cos(th2) sin(th2)
                  0 -sin(th2) cos(th2)];
-    expwth{3} = [1         0        0
+    expwth[3] = [1         0        0
                  0  cos(th3) sin(th3)
                  0 -sin(th3) cos(th3)];
-    expwth{4} = [ cos(th4) 0 sin(th4)
+    expwth[4] = [ cos(th4) 0 sin(th4)
                          0 1        0
                  -sin(th4) 0 cos(th4)];
-    expwth{5} = [1         0        0
+    expwth[5] = [1         0        0
                  0  cos(th5) sin(th5)
                  0 -sin(th5) cos(th5)];          
 
     v = cell(1,numJoints);
     xi = cell(1,numJoints);
     for i = 1:numJoints
-        v{i} = cross(-w{i},q{i});
-        xi{i} = [v{i};w{i}];
-        expxith{i} = [expwth{i} (eye(spaDim)-expwth{i})*cross(w{i},v{i})+w{i}*transpose(w{i})*v{i}*th(i);zeros(1,spaDim) 1];
+        v[i] = np.cross(-w[i],q[i]);
+        xi[i] = [v[i];w[i]];
+        expxith[i] = [expwth[i] (eye(spaDim)-expwth[i])*np.cross(w[i],v[i])+w[i]*np.transpose(w[i])*v[i]*th(i);zeros(1,spaDim) 1];
     end
 
-    gst = simplify(expxith{1}*expxith{2}*expxith{3}*expxith{4}*expxith{5}*gst0);
+    gst = simplify(expxith[1]*expxith[2]*expxith[3]*expxith[4]*expxith[5]*gst0);
 
     ##% Inverse kinematics
 

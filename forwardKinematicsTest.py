@@ -14,8 +14,8 @@ if __name__ == '__main__':
 	arm.setQ3(0)
 	'''
 	armJac = arm.getJacobianNumeric();
-	print('printing arm jabobian matrix')
-	print(armJac)
+	#print('printing arm jabobian matrix')
+	#print(armJac)
 
 	d = np.matrix([7,4,1]).T
 	print('moving end effector to point ')
@@ -27,6 +27,8 @@ if __name__ == '__main__':
 	e = d-arm.getPointsColumn()
 	print('printing current error')
 	print(e)
+	print('these are the current Arm Angles')
+	print(arm.getArmAngles())
 	#arm.plot3dArm()
 	#fig1 = plt.figure()
 	#fig1.set_visible(1)

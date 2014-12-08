@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import time
 import scipy as scipy
 import sympy as sym
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 #Robot Arm Model
@@ -21,24 +22,35 @@ class GreenRobotArm():
         might we want to initialize these to be pointing in the positive y direction?
         '''
         print('initializing arm')
-        self.L1 = 5
-        self.L2 = 5
-        self.L3 = 5
-        self.L4= 2
+        self.L1 = 5#150
+        self.L2 = 5#240
+        self.L3 = 5#300
+        self.L4= 2#80
         
         #Joint angles All need to be with respect to something
 
 
         # 
         self.q1= 0
-        
+        self.q1Max = np.pi*3; 
+        self.q1Min = -np.pi*3;
+
         self.q2 = 0
+        self.q2Max = np.pi/2; 
+        self.q2Min = -np.pi/2;
         
         self.q3 = 0
+        self.q3Max = np.pi/2; 
+        self.q3Min = -np.pi/2;
         
         self.q4 = 0#+np.pi/4
+        self.q4Max = np.pi/2; 
+        self.q4Min = -np.pi/2;
         
         self.q5 = 0
+        self.q5Max = np.pi/2; 
+        self.q5Min = -np.pi/2;
+
         
         #self.workMatrix = self.generateInverseTable();
 
@@ -46,20 +58,55 @@ class GreenRobotArm():
        #The robot's joint angles and rigid body lengths. 
     def setQ1(self, inputQ1):
         
+        if(inputQ1> self.q1Max):
+            newQ1 = self.q1Max
+        elif(inputQ1<self.q1Min):
+            newQ1 = self.q1Max
+        else:
+            newQ1 = inputQ1
+
         self.q1 = inputQ1
         #print('self.q1 has been changed to'+str(self.q1))
         
 
     def setQ2(self, inputQ2):
+        if(inputQ2> self.q2Max):
+            newQ2 = self.q2Max
+        elif(inputQ2<self.q2Min):
+            newQ2 = self.q2Max
+        else:
+            newQ2 = inputQ2
+
         self.q2 = inputQ2
     
     def setQ3(self, inputQ3):
+        if(inputQ3> self.q3Max):
+            newQ3 = self.q3Max
+        elif(inputQ3<self.q3Min):
+            newQ3 = self.q3Max
+        else:
+            newQ3 = inputQ3
+
         self.q3 = inputQ3
     
     def setQ4(self, inputQ4):
+        if(inputQ4> self.q4Max):
+            newQ4 = self.q4Max
+        elif(inputQ4<self.q4Min):
+            newQ4 = self.q4Max
+        else:
+            newQ4 = inputQ4
+
         self.q4 = inputQ4
     
     def setQ5(self, inputQ5):
+        if(inputQ5> self.q5Max):
+            newQ5 = self.q5Max
+        elif(inputQ5<self.q5Min):
+            newQ5 = self.q5Max
+        else:
+            newQ5 = inputQ5
+
         self.q5 = inputQ5
 
     '''
@@ -151,9 +198,7 @@ class GreenRobotArm():
 
         #The location of the tool given the robot arm's current joint angles
     	#This is a 4X4 matrix, and the top three values in the rightmost column describe it's cartesian coordinates wrt the to origin
-        '''
-        ******I'M PRETTY SURE gst_q IS RIGHT, THE OTHER MATRICES BELOW ARE DUBIOUS********
-        '''
+     
         gst_q=(e_xiq1*e_xiq2*e_xiq3*e_xiq4*e_xiq5)*gst_0
         
 
@@ -247,6 +292,23 @@ class GreenRobotArm():
         #plt.plot(x,z)
         #plt.plot(y,z)
 
+    #This function will return a unit column vector in the direction of the end effector
+    def computeMarkerOrientation(self):
+        armPoints = self.getPlotPoints()
+
+        xs = armPoints[0]
+        ys = armPoints[1]
+        zs = armPoints[2]
+
+        p5 = np.matrix([xs[4], ys[4], zs[4]]).T
+        p4 = np.matrix([xs[3], ys[3], zs[3]]).T
+
+        r = p5-p4
+        rMag = np.linalg.norm(r)
+
+        return (r/rMag)
+
+
     def getPointsColumn(self):
         armPoints = self.getPlotPoints()
         xs=armPoints[0]
@@ -308,11 +370,12 @@ class GreenRobotArm():
 
         return jac;
 
-    #p should be in the form of a column x,y,z
+    #p should be a column matrix of shape 3x1 
     def goToPoint(self,p):
         errorMag=2;
-        threshold = .02
-        a=0.001;
+        threshold = .01
+        maxIterations = 100
+        count =0
         while (errorMag >threshold):
             l_d=p;#%[0;400;35]; #%end point (desired location)
             l_c=self.getPointsColumn();# current coordinates of the robot arm 
@@ -324,16 +387,33 @@ class GreenRobotArm():
             #print(e.shape)
             #print('the shape of Jac')
             #print(Jac.shape)
+            #print(self.getArmAngles())
             th_d= angles+(np.dot(Jac_inv,e)) #desired joint angles
-            self.setQ1(th_d.item(0))
-            self.setQ2(th_d.item(1))
-            self.setQ3(th_d.item(2))
-            self.setQ4(th_d.item(3))
-            self.setQ5(th_d.item(4))
+
+            self.setQ1(th_d.item(0)%(np.pi*2))
+            self.setQ2(th_d.item(1)%(np.pi*2))
+            self.setQ3(th_d.item(2)%(np.pi*2))
+            self.setQ4(th_d.item(3)%(np.pi*2))
+            self.setQ5(th_d.item(4)%(np.pi*2))
                 #subs(Tr); #%to check for intermediate coordinate points
             newPoints = self.getPointsColumn()
             newError = l_d-newPoints
             errorMag=np.linalg.norm(newError); #% calculating the norm for running the loop
+            '''
+            there may be a case in which the arm will attempt to travel to a point that is 
+            not reachable by the arm. If this is the case, the loop will go on forever trying to get to the point
+            the code below will break the loop after a certain iteration threshold
+            '''
+            if(count>=maxIterations):
+                print('the loop has iterated '+ str(maxIterations)+' times and the point has not been reached. ')
+                print('navigation to point:')
+                print(p)
+                print('has failed')
+                break
+            
+            count = count+1
+            #print('the while loop has performed '+str(count)+ ' iterations')
+        return np.matrix([self.q1,self.q2,self.q3,self.q4,self.q5]).T
 
     
     def plotXY(self):

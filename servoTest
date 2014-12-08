@@ -1,0 +1,14 @@
+import sympy as sym
+from RobotArm import*
+from GreenRobotDriver import*
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+if __name__ == '__main__':
+
+	arm = GreenRobotDriver();
+
+	arm.goToAngles(np.pi/5, np.pi/5)
+
+	print('done')
